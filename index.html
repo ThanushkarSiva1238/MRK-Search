@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="doom">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DOOM SEARCH</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ============ RESET ============ */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { min-height: 100vh; overflow-x: hidden; }
+  button { font: inherit; cursor: pointer; background: none; border: none; color: inherit; }
+  input { font: inherit; color: inherit; }
+  a { color: inherit; text-decoration: none; }
+  ul { list-style: none; }
+  svg { display: block; }
+
+  /* ============ THEME TOKENS ============ */
+  :root {
+    --radius-sm: 4px;
+    --radius-md: 10px;
+    --radius-lg: 18px;
+    --transition-fast: .25s ease;
+    --transition-mid: .55s cubic-bezier(.4,0,.2,1);
+    --transition-slow: .9s cubic-bezier(.4,0,.2,1);
+  }
+
+  [data-theme="doom"] {
+    --bg: #080A09;
+    --bg-2: #111513;
+    --surface: #0E1210;
+    --surface-2: #14211A;
+    --accent: #0B5C2A;
+    --accent-glow: #48FF7B;
+    --accent-soft: #123B22;
+    --text-1: #E6F0E9;
+    --text-2: #8D9A91;
+    --text-3: #58635D;
+    --border: #29332D;
+    --danger: #7A2E2E;
+    --font-display: 'Cinzel', serif;
+    --font-ui: 'Rajdhani', sans-serif;
+    --shadow-glow: 0 0 24px rgba(72,255,123,.25);
+    --panel-shadow: 0 20px 60px rgba(0,0,0,.55);
+  }
+
+  [data-theme="stark"] {
+    --bg: #F4F6F8;
+    --bg-2: #FFFFFF;
+    --surface: #FFFFFF;
+    --surface-2: #E4E8EC;
+    --accent: #C62828;
+    --accent-glow: #00B8D4;
+    --accent-soft: #FBE9E7;
+    --accent-gold: #D4A72C;
+    --text-1: #15191D;
+    --text-2: #56616B;
+    --text-3: #8A939B;
+    --border: #CDD3D8;
+    --danger: #8E1B1B;
+    --font-display: 'Orbitron', sans-serif;
+    --font-ui: 'Inter', sans-serif;
+    --shadow-glow: 0 0 26px rgba(0,184,212,.28);
+    --panel-shadow: 0 20px 46px rgba(21,25,29,.08);
+  }
+
+  /* ============ BASE ============ */
+  body {
+    background: var(--bg);
+    color: var(--text-1);
+    font-family: var(--font-ui);
+    background-image:
+      radial-gradient(circle at 15% 0%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 45%),
+      radial-gradient(circle at 90% 20%, color-mix(in srgb, var(--accent-glow) 8%, transparent), transparent 40%);
+    transition: background-color var(--transition-slow), color var(--transition-slow);
+    position: relative;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: .5;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 64px 64px;
+    -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 0%, transparent 70%);
+            mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 0%, transparent 70%);
+    transition: opacity var(--transition-slow);
+  }
+  [data-theme="stark"] body::before { opacity: .35; }
+
+  .wrap { position: relative; z-index: 1; max-width: 1400px; margin: 0 auto; padding: 28px clamp(20px, 4vw, 56px) 60px; }
+
+  /* ============ HEADER ============ */
+  .topbar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+    padding-bottom: 26px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: clamp(32px, 6vw, 64px);
+    transition: border-color var(--transition-mid);
+  }
+
+  .brand { display: flex; align-items: center; gap: 18px; }
+
+  .core-icon {
+    width: 52px; height: 52px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    position: relative;
+    transition: border-color var(--transition-mid), box-shadow var(--transition-mid), transform var(--transition-fast);
+    box-shadow: 0 0 0 rgba(0,0,0,0);
+  }
+  .core-icon:hover { box-shadow: var(--shadow-glow); transform: translateY(-1px); }
+  .core-icon:active { transform: translateY(0) scale(.96); }
+  .core-icon svg { width: 34px; height: 34px; position: absolute; inset: 0; margin: auto; opacity: 0; transform: scale(.7) rotate(-25deg); transition: opacity var(--transition-mid), transform var(--transition-mid); }
+  [data-theme="doom"] .core-icon .icon-doom { opacity: 1; transform: scale(1) rotate(0deg); }
+  [data-theme="stark"] .core-icon .icon-stark { opacity: 1; transform: scale(1) rotate(0deg); }
+  [data-theme="doom"] .core-icon .icon-stark { opacity: 0; transform: scale(.7) rotate(25deg); }
+  [data-theme="stark"] .core-icon .icon-doom { opacity: 0; transform: scale(.7) rotate(-25deg); }
+  .core-icon:hover .icon-doom,
+  .core-icon:hover .icon-stark { animation: coreSpin 6s linear infinite; }
+  @keyframes coreSpin { to { transform: rotate(360deg) scale(1); } }
+
+  .brand-text .logo-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: .12em;
+    font-size: clamp(20px, 2.6vw, 30px);
+    color: var(--text-1);
+    transition: color var(--transition-mid), font-family var(--transition-fast);
+  }
+
+  .status-line {
+    display: flex; align-items: center; gap: 8px;
+    margin-top: 6px;
+    font-family: var(--font-ui);
+    font-size: 13px;
+    letter-spacing: .12em;
+    color: var(--text-2);
+    text-transform: uppercase;
+  }
+  .status-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent-glow);
+    box-shadow: 0 0 8px var(--accent-glow);
+    animation: statusPulse 2.4s ease-in-out infinite;
+  }
+  @keyframes statusPulse { 0%,100%{ opacity:1; } 50%{ opacity:.35; } }
+
+  .system-info { text-align: right; font-family: var(--font-ui); }
+  .datetime {
+    font-family: var(--font-display);
+    font-size: clamp(15px, 1.8vw, 22px);
+    letter-spacing: .08em;
+    color: var(--text-1);
+    display: flex; gap: 14px; justify-content: flex-end; flex-wrap: wrap;
+  }
+  .ip-line {
+    margin-top: 8px;
+    font-size: 13px;
+    letter-spacing: .1em;
+    color: var(--text-2);
+    text-transform: uppercase;
+  }
+  .ip-line span { color: var(--accent-glow); font-weight: 600; }
+
+  /* ============ HERO ============ */
+  .hero { display: flex; flex-direction: column; align-items: center; text-align: center; padding-bottom: 30px; }
+
+  .hero-core { width: 128px; height: 128px; margin-bottom: 26px; position: relative; }
+  .hero-core svg { width: 100%; height: 100%; }
+  .hero-core .ring-outer { fill: none; stroke: var(--border); stroke-width: 1.2; transition: stroke var(--transition-mid); }
+  .hero-core .ring-mid { fill: none; stroke: var(--accent-glow); stroke-width: 1.4; opacity: .75; transform-origin: 50px 50px; animation: spinSlow 9s linear infinite; transition: stroke var(--transition-mid); }
+  .hero-core .ring-inner { fill: none; stroke: var(--accent); stroke-width: 5; transition: stroke var(--transition-mid); }
+  .hero-core .core-dot { fill: var(--accent-glow); filter: drop-shadow(0 0 10px var(--accent-glow)); animation: coreBreathe 3.2s ease-in-out infinite; transition: fill var(--transition-mid); }
+  .hero-core .tick { stroke: var(--text-3); stroke-width: 1; transition: stroke var(--transition-mid); }
+  @keyframes spinSlow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  @keyframes coreBreathe { 0%,100%{ transform: scale(1); } 50%{ transform: scale(1.12); } }
+
+  .hero-core.pulse-burst { animation: burst .9s ease; }
+  @keyframes burst {
+    0% { transform: scale(1); filter: brightness(1); }
+    35% { transform: scale(1.18); filter: brightness(1.6); }
+    100% { transform: scale(1); filter: brightness(1); }
+  }
+
+  .hero-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(28px, 5vw, 46px);
+    letter-spacing: .08em;
+    color: var(--accent);
+    text-shadow: 0 0 30px color-mix(in srgb, var(--accent-glow) 30%, transparent);
+    transition: color var(--transition-mid);
+  }
+  .hero-tagline {
+    margin-top: 10px;
+    font-family: var(--font-ui);
+    font-weight: 600;
+    letter-spacing: .2em;
+    font-size: clamp(13px, 1.6vw, 18px);
+    text-transform: uppercase;
+    color: var(--text-2);
+  }
+
+  /* ============ SEARCH ============ */
+  .search-form { width: min(720px, 100%); margin-top: clamp(24px, 4vw, 40px); }
+  .search-box {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 6px 8px 6px 22px;
+    transition: border-color var(--transition-mid), box-shadow var(--transition-fast), background-color var(--transition-mid);
+  }
+  .search-box:focus-within { border-color: var(--accent-glow); box-shadow: var(--shadow-glow); }
+
+  .search-box input[type="search"] {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-family: var(--font-ui);
+    font-size: clamp(15px, 1.8vw, 18px);
+    letter-spacing: .02em;
+    color: var(--text-1);
+    padding: 12px 0;
+  }
+  .search-box input[type="search"]::placeholder { color: var(--text-3); }
+  .search-box input[type="search"]::-webkit-search-cancel-button { display: none; }
+
+  .clear-btn {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    display: none;
+    align-items: center; justify-content: center;
+    color: var(--text-2);
+    border: 1px solid var(--border);
+    font-size: 15px;
+    line-height: 1;
+    transition: color var(--transition-fast), border-color var(--transition-fast);
+  }
+  .clear-btn.visible { display: inline-flex; }
+  .clear-btn:hover { color: var(--accent-glow); border-color: var(--accent-glow); }
+
+  .search-btn {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    background: var(--accent);
+    color: var(--bg-2);
+    flex-shrink: 0;
+    transition: background-color var(--transition-mid), transform var(--transition-fast), box-shadow var(--transition-fast);
+  }
+  [data-theme="stark"] .search-btn { color: #fff; }
+  .search-btn svg { width: 18px; height: 18px; }
+  .search-btn:hover { box-shadow: var(--shadow-glow); transform: scale(1.04); }
+  .search-btn:active { transform: scale(.96); }
+
+  .kbd-hint { margin-top: 12px; font-size: 12px; letter-spacing: .1em; color: var(--text-3); text-transform: uppercase; }
+  .kbd-hint kbd {
+    font-family: var(--font-ui);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 6px;
+    margin: 0 2px;
+    color: var(--text-2);
+  }
+
+  /* search status / loading */
+  .search-status {
+    min-height: 26px;
+    margin-top: 22px;
+    font-family: var(--font-ui);
+    font-weight: 600;
+    letter-spacing: .18em;
+    font-size: 13px;
+    text-transform: uppercase;
+    color: var(--accent-glow);
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+  }
+  .spinner {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 2px solid color-mix(in srgb, var(--accent-glow) 30%, transparent);
+    border-top-color: var(--accent-glow);
+    animation: spin .8s linear infinite;
+    display: none;
+  }
+  .search-status.loading .spinner { display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ============ PANELS ============ */
+  .panels {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    gap: clamp(18px, 3vw, 28px);
+  }
+
+  .panel {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 26px 24px;
+    box-shadow: var(--panel-shadow);
+    transition: background-color var(--transition-mid), border-color var(--transition-mid);
+  }
+
+  .panel h3 {
+    font-family: var(--font-display);
+    font-size: 14px;
+    letter-spacing: .18em;
+    color: var(--text-1);
+    text-transform: uppercase;
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+    transition: border-color var(--transition-mid);
+  }
+
+  .project-link {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 15px 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    margin-bottom: 12px;
+    font-weight: 600;
+    letter-spacing: .04em;
+    color: var(--accent-glow);
+    transition: border-color var(--transition-fast), transform var(--transition-fast), background-color var(--transition-mid);
+  }
+  .project-link:last-child { margin-bottom: 0; }
+  .project-link:hover { border-color: var(--accent-glow); transform: translateX(4px); }
+  .project-link .arrow { opacity: .6; }
+
+  .projects-list {
+    max-height: 232px;
+    overflow-y: auto;
+    padding-right: 6px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-glow) transparent;
+  }
+  .projects-list::-webkit-scrollbar { width: 6px; }
+  .projects-list::-webkit-scrollbar-track { background: transparent; }
+  .projects-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }
+  .projects-list::-webkit-scrollbar-thumb:hover { background: var(--accent-glow); }
+
+  .sites-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 6px;
+    padding-bottom: 4px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-glow) transparent;
+  }
+  .sites-grid::-webkit-scrollbar { width: 6px; }
+  .sites-grid::-webkit-scrollbar-track { background: transparent; }
+  .sites-grid::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }
+  .sites-grid::-webkit-scrollbar-thumb:hover { background: var(--accent-glow); }
+
+  .site-btn {
+    aspect-ratio: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    display: grid; place-items: center;
+    color: var(--text-2);
+    position: relative;
+    transition: border-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast), background-color var(--transition-mid);
+  }
+  .site-btn img { width: 58%; height: 58%; object-fit: contain; border-radius: 6px; }
+  .site-btn svg { width: 44%; height: 44%; }
+  .site-btn:hover { border-color: var(--accent-glow); color: var(--accent-glow); transform: translateY(-2px); box-shadow: var(--shadow-glow); }
+  .site-btn .site-label {
+    position: absolute; bottom: -26px; left: 50%; transform: translateX(-50%);
+    font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3);
+    white-space: nowrap; opacity: 0; transition: opacity var(--transition-fast);
+    pointer-events: none;
+  }
+  .site-btn:hover .site-label, .site-btn:focus-visible .site-label { opacity: 1; }
+
+  /* ============ FOOTER ============ */
+  footer {
+    margin-top: clamp(48px, 7vw, 80px);
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center; gap: 14px;
+    flex-wrap: wrap;
+    transition: border-color var(--transition-mid);
+  }
+  .footer-logos { display: flex; gap: 8px; }
+  .footer-logos .mini-core { width: 26px; height: 26px; }
+  .footer-text {
+    font-family: var(--font-ui);
+    font-size: 13px;
+    letter-spacing: .1em;
+    color: var(--text-2);
+    text-transform: uppercase;
+  }
+  .footer-text strong { color: var(--accent-glow); font-weight: 700; }
+
+  /* ============ TOAST ============ */
+  .toast {
+    position: fixed;
+    left: 50%; bottom: 30px;
+    transform: translate(-50%, 20px);
+    background: var(--surface);
+    border: 1px solid var(--accent-glow);
+    color: var(--text-1);
+    padding: 12px 22px;
+    border-radius: 999px;
+    font-family: var(--font-ui);
+    font-size: 13px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    box-shadow: var(--shadow-glow);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .35s ease, transform .35s ease;
+    z-index: 50;
+  }
+  .toast.visible { opacity: 1; transform: translate(-50%, 0); }
+
+  /* ============ TRANSFORM OVERLAY ============ */
+  .boot-overlay {
+    position: fixed; inset: 0;
+    display: grid; place-items: center;
+    background: var(--bg);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 100;
+    transition: opacity .5s ease, background-color var(--transition-mid);
+  }
+  .boot-overlay.active { opacity: .96; }
+  .boot-overlay span {
+    font-family: var(--font-display);
+    font-size: clamp(20px, 4vw, 34px);
+    letter-spacing: .3em;
+    color: var(--accent-glow);
+    text-shadow: 0 0 30px var(--accent-glow);
+  }
+
+  /* ============ RESPONSIVE ============ */
+  @media (max-width: 1024px) {
+    .panels { grid-template-columns: 1fr; }
+    .sites-grid { grid-template-columns: repeat(4, 1fr); }
+  }
+  @media (max-width: 720px) {
+    .topbar { flex-direction: column; align-items: flex-start; }
+    .system-info { text-align: left; }
+    .datetime { justify-content: flex-start; }
+    .sites-grid { grid-template-columns: repeat(3, 1fr); }
+    .search-box { padding-left: 16px; }
+  }
+  @media (max-width: 480px) {
+    .sites-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .hero-core { width: 96px; height: 96px; }
+  }
+
+  /* ============ ACCESSIBILITY ============ */
+  :focus-visible { outline: 2px solid var(--accent-glow); outline-offset: 3px; border-radius: 4px; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: .001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: .001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="boot-overlay" id="bootOverlay"><span id="bootText">DOOM SYSTEM ONLINE</span></div>
+<div class="toast" id="toast"></div>
+
+<div class="wrap">
+
+  <!-- HEADER -->
+  <header class="topbar">
+    <div class="brand">
+      <button class="core-icon" id="coreToggle" aria-label="Switch system theme">
+        <svg class="icon-doom" viewBox="0 0 100 100">
+          <polygon points="50,5 90,27.5 90,72.5 50,95 10,72.5 10,27.5" fill="none" stroke="var(--accent-glow)" stroke-width="3"/>
+          <polygon points="50,24 69,37 69,63 50,76 31,63 31,37" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="2.5"/>
+          <line x1="50" y1="5" x2="50" y2="24" stroke="var(--accent)" stroke-width="2.5"/>
+          <line x1="50" y1="76" x2="50" y2="95" stroke="var(--accent)" stroke-width="2.5"/>
+          <rect x="42" y="42" width="16" height="16" fill="var(--accent-glow)" transform="rotate(45 50 50)"/>
+        </svg>
+        <svg class="icon-stark" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="43" fill="none" stroke="var(--accent-glow)" stroke-width="3"/>
+          <circle cx="50" cy="50" r="31" fill="none" stroke="var(--accent-gold)" stroke-width="2" stroke-dasharray="5 5"/>
+          <polygon points="50,32 65,58 35,58" fill="var(--accent-glow)" opacity=".9"/>
+          <circle cx="50" cy="50" r="9" fill="#ffffff"/>
+          <circle cx="50" cy="50" r="9" fill="none" stroke="var(--accent)" stroke-width="2"/>
+        </svg>
+      </button>
+      <div class="brand-text">
+        <h1 class="logo-title" id="siteTitle">DOOM SEARCH</h1>
+        <div class="status-line">
+          <span class="status-dot"></span>
+          <span id="statusLabel">SYSTEM: ONLINE</span>
+        </div>
+      </div>
+    </div>
+    <div class="system-info">
+      <div class="datetime">
+        <span id="dateDisplay">01-01-2026</span>
+        <span id="timeDisplay">00:00:00</span>
+      </div>
+      <div class="ip-line">IP ADDRESS: <span id="ipDisplay">DETECTING…</span></div>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-core" id="heroCore">
+      <svg viewBox="0 0 100 100">
+        <circle class="ring-outer" cx="50" cy="50" r="46"/>
+        <circle class="ring-mid" cx="50" cy="50" r="35" stroke-dasharray="4 7"/>
+        <circle class="ring-inner" cx="50" cy="50" r="24" stroke-dasharray="0" fill="none"/>
+        <g class="core-ticks">
+          <line class="tick" x1="50" y1="4" x2="50" y2="12" transform="rotate(0 50 50)"/>
+          <line class="tick" x1="50" y1="4" x2="50" y2="12" transform="rotate(45 50 50)"/>
+          <line class="tick" x1="50" y1="4" x2="50" y2="12" transform="rotate(90 50 50)"/>
+          <line class="tick" x1="50" y1="4" x2="50" y2="12" transform="rotate(135 50 50)"/>
+          <line class="tick" x1="50" y1="4" x2="50" y2="12" transform="rotate(180 50 50)"/>
+          <line class="tick" x1="50" y1="4" x2="50" y2="12" transform="rotate(225 50 50)"/>
+          <line class="tick" x1="50" y1="4" x2="50" y2="12" transform="rotate(270 50 50)"/>
+          <line class="tick" x1="50" y1="4" x2="50" y2="12" transform="rotate(315 50 50)"/>
+        </g>
+        <circle class="core-dot" cx="50" cy="50" r="7"/>
+      </svg>
+    </div>
+
+    <h2 class="hero-title" id="heroTitle">DOOM SEARCH …</h2>
+    <p class="hero-tagline" id="heroTagline">KNOWLEDGE AWAITS THE WORTHY</p>
+
+    <form id="searchForm" class="search-form" role="search" autocomplete="off" action="https://www.google.com/search" method="GET" target="_blank">
+      <div class="search-box">
+        <input type="search" name="q" id="searchInput" placeholder="State your query…" autocomplete="off" aria-label="Search query">
+        <button type="button" class="clear-btn" id="clearBtn" aria-label="Clear search">&times;</button>
+        <button type="submit" class="search-btn" aria-label="Run search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round">
+            <circle cx="11" cy="11" r="7"/>
+            <line x1="21" y1="21" x2="16.4" y2="16.4"/>
+          </svg>
+        </button>
+      </div>
+      <p class="kbd-hint">Press <kbd>Ctrl</kbd>+<kbd>K</kbd> or <kbd>/</kbd> to search</p>
+    </form>
+
+    <div class="search-status" id="searchStatus" aria-live="polite">
+      <span class="spinner"></span>
+      <span id="statusText"></span>
+    </div>
+  </section>
+
+  <!-- PANELS -->
+  <section class="panels">
+    <div class="panel">
+      <h3>Creator's Projects</h3>
+      <div class="projects-list" id="projectsList"></div>
+    </div>
+
+    <div class="panel">
+      <h3>Recommended Websites</h3>
+      <div class="sites-grid" id="sitesGrid"></div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-logos">
+      <svg class="mini-core" viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="none" stroke="var(--accent-glow)" stroke-width="4"/><circle cx="50" cy="50" r="14" fill="var(--accent-glow)"/></svg>
+      <svg class="mini-core" viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="none" stroke="var(--accent)" stroke-width="4"/><circle cx="50" cy="50" r="14" fill="var(--accent)"/></svg>
+    </div>
+    <p class="footer-text">&copy; Developed By: <strong>Thanushkar MRK</strong></p>
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------- THEME TEXT ---------- */
+  const THEME = {
+    doom: {
+      pageTitle: "DOOM SEARCH",
+      title: "DOOM SEARCH …",
+      tagline: "KNOWLEDGE AWAITS THE WORTHY",
+      placeholder: "State your query…",
+      boot: "DOOM SYSTEM ONLINE",
+      searching: "SEARCHING THE KNOWLEDGE NETWORK",
+      processing: "PROCESSING KNOWLEDGE",
+      complete: "KNOWLEDGE ACQUIRED",
+      empty: "DOOM FINDS NOTHING",
+      sourceTag: "ARCHIVE NODE"
+    },
+    stark: {
+      pageTitle: "STARK SEARCH",
+      title: "STARK SEARCH …",
+      tagline: "WHAT CAN I HELP YOU FIND?",
+      placeholder: "What are you looking for?",
+      boot: "STARK SYSTEM ONLINE",
+      searching: "SEARCHING NETWORK",
+      processing: "ANALYZING REQUEST",
+      complete: "ANALYSIS COMPLETE",
+      empty: "I COULDN'T FIND ANYTHING, SIR.",
+      sourceTag: "NETWORK NODE"
+    }
+  };
+
+  const html = document.documentElement;
+  const el = {
+    coreToggle: document.getElementById("coreToggle"),
+    heroCore: document.getElementById("heroCore"),
+    siteTitle: document.getElementById("siteTitle"),
+    heroTitle: document.getElementById("heroTitle"),
+    heroTagline: document.getElementById("heroTagline"),
+    searchInput: document.getElementById("searchInput"),
+    searchForm: document.getElementById("searchForm"),
+    clearBtn: document.getElementById("clearBtn"),
+    searchStatus: document.getElementById("searchStatus"),
+    statusText: document.getElementById("statusText"),
+    toast: document.getElementById("toast"),
+    sitesGrid: document.getElementById("sitesGrid"),
+    projectsList: document.getElementById("projectsList"),
+    dateDisplay: document.getElementById("dateDisplay"),
+    timeDisplay: document.getElementById("timeDisplay"),
+    ipDisplay: document.getElementById("ipDisplay"),
+    bootOverlay: document.getElementById("bootOverlay"),
+    bootText: document.getElementById("bootText")
+  };
+
+  /* ---------- CLOCK ---------- */
+  function pad(n) { return String(n).padStart(2, "0"); }
+  function updateClock() {
+    const now = new Date();
+    el.dateDisplay.textContent = `${pad(now.getDate())}-${pad(now.getMonth() + 1)}-${now.getFullYear()}`;
+    el.timeDisplay.textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  /* ---------- IP ADDRESS ---------- */
+  fetch("https://api.ipify.org?format=json")
+    .then((r) => r.json())
+    .then((d) => { el.ipDisplay.textContent = d.ip; })
+    .catch(() => { el.ipDisplay.textContent = "UNAVAILABLE"; });
+
+  /* ---------- THEME APPLY ---------- */
+  function applyText(theme) {
+    const t = THEME[theme];
+    el.siteTitle.textContent = t.pageTitle;
+    el.heroTitle.textContent = t.title;
+    el.heroTagline.textContent = t.tagline;
+    el.searchInput.placeholder = t.placeholder;
+    document.title = t.pageTitle;
+  }
+  applyText("doom");
+
+  function toggleTheme() {
+    const current = html.getAttribute("data-theme");
+    const next = current === "doom" ? "stark" : "doom";
+    const t = THEME[next];
+
+    // core pulse burst
+    el.heroCore.classList.remove("pulse-burst");
+    void el.heroCore.offsetWidth;
+    el.heroCore.classList.add("pulse-burst");
+
+    // boot overlay flash
+    el.bootText.textContent = t.boot;
+    el.bootOverlay.classList.add("active");
+
+    setTimeout(() => {
+      html.setAttribute("data-theme", next);
+      applyText(next);
+    }, 260);
+
+    setTimeout(() => {
+      el.bootOverlay.classList.remove("active");
+    }, 900);
+  }
+  el.coreToggle.addEventListener("click", toggleTheme);
+  el.coreToggle.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleTheme(); }
+  });
+
+  /* ---------- KEYBOARD SHORTCUTS ---------- */
+  window.addEventListener("keydown", (e) => {
+    const isTyping = document.activeElement === el.searchInput;
+    if ((e.ctrlKey && e.key.toLowerCase() === "k") || (e.key === "/" && !isTyping)) {
+      e.preventDefault();
+      el.searchInput.focus();
+    }
+  });
+
+  /* ---------- CLEAR BUTTON ---------- */
+  function refreshClear() {
+    el.clearBtn.classList.toggle("visible", el.searchInput.value.length > 0);
+  }
+  el.searchInput.addEventListener("input", refreshClear);
+  el.clearBtn.addEventListener("click", () => {
+    el.searchInput.value = "";
+    refreshClear();
+    el.searchInput.focus();
+  });
+
+  /* ---------- TOAST ---------- */
+  let toastTimer;
+  function showToast(msg) {
+    clearTimeout(toastTimer);
+    el.toast.textContent = msg;
+    el.toast.classList.add("visible");
+    toastTimer = setTimeout(() => el.toast.classList.remove("visible"), 2400);
+  }
+  document.querySelectorAll("[data-toast]").forEach((n) => {
+    n.addEventListener("click", (e) => {
+      e.preventDefault();
+      showToast(n.getAttribute("data-toast"));
+    });
+  });
+
+  /* ---------- CREATOR'S PROJECTS (up to 6, scrolls once it overflows) ---------- */
+  const projects = [
+    { name: "Exhibition Download Center", url: "https://thanushkarsiva1238.github.io/Exhibition-Download-Center/" },
+    { name: "Human VS AI", url: "https://thanushkarsiva1238.github.io/H-VS-A/" },
+    { name: "Unicode-Bamini Converter", url: "https://thanushkarsiva1238.github.io/Unicode-Bamini-Converter/" },
+    { name: "Digital Study Desk", url: "https://thanushkarsiva1238.github.io/DigitalStudyDesk/" },
+    { name: "Assignment Tools", url: "https://thanumrk.blogspot.com/?m=1" }
+  ];
+
+  projects.slice(0, 6).forEach((p) => {
+    const a = document.createElement("a");
+    a.className = "project-link";
+    a.href = p.url || "#";
+    if (p.url) {
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+    } else {
+      a.setAttribute("data-toast", "Project link not configured yet.");
+      a.addEventListener("click", (e) => {
+        e.preventDefault();
+        showToast("Project link not configured yet.");
+      });
+    }
+    a.innerHTML = `<span>${p.name}</span><span class="arrow">→</span>`;
+    el.projectsList.appendChild(a);
+  });
+
+  /* ---------- SEARCH ---------- */
+  el.searchForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const query = el.searchInput.value.trim();
+    if (!query) { el.searchInput.focus(); return; }
+
+    const theme = html.getAttribute("data-theme");
+    const t = THEME[theme];
+
+    el.searchStatus.classList.add("loading");
+    el.statusText.textContent = t.processing;
+
+    setTimeout(() => {
+      el.statusText.textContent = t.searching;
+    }, 400);
+
+    setTimeout(() => {
+      window.open("https://www.google.com/search?q=" + encodeURIComponent(query), "_blank", "noopener");
+      el.searchStatus.classList.remove("loading");
+      el.statusText.textContent = t.complete;
+    }, 900);
+  });
+
+  /* ---------- RECOMMENDED SITES GRID (up to 9, scrolls once it overflows) ---------- */
+  const sites = [
+    { label: "Google", domain: "google.com" },
+    { label: "YouTube", domain: "youtube.com" },
+    { label: "GitHub", domain: "github.com" },
+    { label: "Wikipedia", domain: "wikipedia.org" },
+    { label: "Reddit", domain: "reddit.com" },
+    { label: "LinkedIn", domain: "linkedin.com" },
+  ];
+
+  const fallbackGlobe = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 3.8 5.7 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.7-3.8-9S9.5 5.5 12 3z"/>
+  </svg>`;
+
+  sites.slice(0, 9).forEach((s) => {
+    const a = document.createElement("a");
+    a.className = "site-btn";
+    a.href = "https://" + s.domain;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    a.setAttribute("aria-label", s.label);
+
+    const img = document.createElement("img");
+    img.src = "https://www.google.com/s2/favicons?sz=128&domain=" + encodeURIComponent(s.domain);
+    img.alt = s.label + " logo";
+    img.loading = "lazy";
+    img.addEventListener("error", () => {
+      img.remove();
+      const span = document.createElement("span");
+      span.innerHTML = fallbackGlobe;
+      a.prepend(span.firstElementChild);
+    });
+
+    const label = document.createElement("span");
+    label.className = "site-label";
+    label.textContent = s.label;
+
+    a.append(img, label);
+    el.sitesGrid.appendChild(a);
+  });
+
+})();
+</script>
+</body>
+</html>
